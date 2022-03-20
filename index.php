@@ -3,30 +3,67 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Page Title</title>
+    <title>Page de connexion</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
     <script src='main.js'></script>
 </head>
 <body>
-    <?php include ("formulaire.php") ?>
-   
+<?php session_start(); ?>
+<h1>Connectez vous</h1>
+    <?php include ("formulaire.php");
+   ?>
     <?php
-        try{
-            $MaBase= new PDO('mysql:host=192.168.1.66; dbname=ucomment','root','root');
-            if(isset($_GET["submit"])){
-                if(!empty($_GET["idUser"]) && !empty($_GET["Nom"])){
-                    echo "Vous êtes bien connectés";
-                }else{
-                    echo "Veuillez remplir tous les champs";
-                }
+    class User{
+        //propriétés
+        private $idUser_;
+        private $pseudo_; 
+        private $password_;
+        //méthodes
+        public function __construct($id,$pseudo,$pass){
+            $this->idUser_=$id;
+            $this->pseudo_=$pseudo;
+            $this->password_=$pass;
+        }
+        public function connexion($motdepass, $pseudo){
+            if($motdepass==$this->password && $pseudo==$this->password_){
+              return true;
             }else{
-                echo "Veuillez vérifier vos informations de connexion";
+                return false;
             }
         }
-        catch(Exception $ex){
-            echo $ex->getMessage();
+        public function getPseudo(){
+            return $this->pseudo_;
         }
+    }
     ?>
+<?php
+$Base= new PDO('mysql:host=192.168.1.66; dbname=Exercice','root','root');
+$resultat=$Base->query("Select * from User");
+$TabUser= array();
+while($donnees=$resultat->fetch()){
+    array_push($TabUser, new User($donnees['idUser'],$donnees['pseudo'],$donnees['password']));
+}
+?>
+
+<?php
+if(isset($_POST["submit"])){
+    $reconnu=false;
+    foreach($TabUser as $user){
+        if($user->getPseudo==$_POST["pseudo"]){
+            $reconnu=true;
+            if($user->connexion($_POST["password"])){
+            echo "Bienvenue".$_POST["pseudo"]."!";
+            }else{
+                echo "Veuillez vérifier votre mot de pass";
+            }
+        }
+    }
+    if(!$reconnu){
+        echo "vous n'êtes pas enregistrés";
+    }
+}
+?>
+
 </body>
 </html>
